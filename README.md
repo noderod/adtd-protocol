@@ -15,6 +15,6 @@ ADTD-P is a fast, reliable way to obtain result files from docker containers.
 ```bash
 	git clone https://github.com/noderod/adtd-protocol
 	cd adtd-protocol
-	bash setter.sh
+	sudo bash setter.sh
 ```
 
