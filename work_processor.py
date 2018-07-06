@@ -12,6 +12,8 @@ import docker
 import tarfile
 import json
 import os, shutil, sys
+import datetime
+import subprocess as sbp
 
 
 r_ser = redis.Redis(host='0.0.0.0', port=6389,db=10)
@@ -56,7 +58,11 @@ for tbp in to_be_processed:
 
     # Runs the commands in a container
     try:
-        CONTAINER = container.run(image = IMG[0].short_id.split(':')[1], command="/bin/bash", detach=True)
+        P = sbp.Popen("docker run -itd "+str(IMG[0].short_id.split(':')[1]), shell=True)
+        P.wait()
+        CID = P[0][:12:] # Container ID
+        CONTAINER = container.get(CID)
+        # CONTAINER = container.run(image = IMG[0].short_id.split(':')[1], command="/bin/bash", detach=True)
     except:
 
         # Container has failed
@@ -64,9 +70,24 @@ for tbp in to_be_processed:
         pass 
         # TODO TODO TODO
 
-    # Starts the container
-    CONTAINER.start()
+    # Runs the commands, keeping track of which succeed and which fail
     all_comms = addat["Command"].split("\"")[1].split(";")
+    prestime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    Con_Data = {"date (Run)":prestime, "Commands":[], "Id":tbp}
+    comres = []
+    for command in all_comms:
+        try:
+            RESP = CONTAINER.exec_run("/bin/bash -c \""+command+"\"", detach=True)
+            comres.append(RESP)
+        except:
+            comres.append("Error")
+
+    # Gets the result
+    RESRES = CONTAINER.get_archive(path=addat["Results"])
+
+
+    # Con_Data = 
+
 
 
     # Deletes the temporary files
