@@ -50,7 +50,23 @@ for tbp in to_be_processed:
         addat = json.load(jdat)
 
     # Loads the docker image
-    image.load("image.tar.gz")
+    ff = open("image.tar.gz", "rb")
+    IMG = image.load(ff.read())
+    ff.close()
+
+    # Runs the commands in a container
+    try:
+        CONTAINER = container.run(image = IMG[0].short_id.split(':')[1], command="/bin/bash", detach=True)
+    except:
+
+        # Container has failed
+        # Send data of failed construction
+        pass 
+        # TODO TODO TODO
+
+    # Starts the container
+    CONTAINER.start()
+    all_comms = addat["Command"].split("\"")[1].split(";")
 
 
     # Deletes the temporary files
