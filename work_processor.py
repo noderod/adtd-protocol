@@ -12,6 +12,8 @@ import docker
 import tarfile
 import json
 import os, shutil, sys
+import datetime
+import subprocess as sbp
 
 
 r_ser = redis.Redis(host='0.0.0.0', port=6389,db=10)
@@ -44,6 +46,7 @@ for tbp in to_be_processed:
     tar = tarfile.open("all_data.tar.gz")
     tar.extractall()
     os.remove("all_data.tar.gz")
+    tar.close()
 
     # Gets the data
     with open(file_location+"adtdp.json", "r") as jdat:
@@ -56,18 +59,70 @@ for tbp in to_be_processed:
 
     # Runs the commands in a container
     try:
-        CONTAINER = container.run(image = IMG[0].short_id.split(':')[1], command="/bin/bash", detach=True)
+        P = sbp.Popen("docker run -itd "+str(IMG[0].short_id.split(':')[1]), shell=True, stdout = sbp.PIPE)
+        CID = P.communicate()[0].decode("UTF-8")[:12:] # Container ID
+        CONTAINER = container.get(CID)
+        # CONTAINER = container.run(image = IMG[0].short_id.split(':')[1], command="/bin/bash", detach=True)
     except:
 
         # Container has failed
         # Send data of failed construction
-        pass 
-        # TODO TODO TODO
+        Con_Data = {"date (Run)":prestime, "Commands":"Failed container", "Id":tbp}
+        r_dat.delete(tbp)
+        r_run.hmset(tbp, Con_Data)
+        container.prune()
+        # Notifies the server
+        requests.post("http://"+server_route+"/boincserver/v2/api/adtdp/failed_job", data=[("work_ID", tbp)])
 
-    # Starts the container
-    CONTAINER.start()
+    # Runs the commands, keeping track of which succeed and which fail
     all_comms = addat["Command"].split("\"")[1].split(";")
+    prestime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    Con_Data = {"date (Run)":prestime, "Commands":[], "Id":tbp}
+    comres = [[], []]
+    for command in all_comms:
+        try:
+            RESP = CONTAINER.exec_run("/bin/bash -c \""+command+"\"")
+            comres[0].append(command)
+            comres[1].append("Success")
+        except:
+            comres[1].append("Error")
 
+    Con_Data["Commands"] = comres
+    # Gets the result
+    try:
+        RESRES = CONTAINER.get_archive(path=addat["Results"])
+    except:
+        addat["Result Error"] = "Folder with results does exist"
+
+    with open("Job_Data.json", "w") as jobdat:
+        addat["Error"] = "Success"
+        addat["Log"] = comres
+        json.dump(addat, jobdat)
+    with open("Results.tar.gz", "wb") as tarta:
+        for bitbit in RESRES[0]:
+            tarta.write(bitbit)
+
+    # Because tar files cannot be modified once created, we have to untar the file and then tar it again
+    os.mkdir("Process-Tar")
+    shutil.move("Job_Data.json", "Process-Tar/Job_Data.json")
+    tar = tarfile.open("Results.tar.gz")
+    tar.extractall("./Process-Tar")
+    tar.close()
+    os.chdir("./Process-Tar")
+    with tarfile.open("Results.tar.gz", "w:gz") as tar:
+        for file in os.listdir("."):
+            tar.add(file)
+
+    shutil.move("Results.tar.gz", "../Results.tar.gz")
+    os.chdir("..")
+    # Eliminates the container
+    CONTAINER.kill() # Stops
+    container.prune() # Deletes
+
+    # Uploads the results to the server
+    requests.post("http://"+server_route+"/boincserver/v2/api/adtdp/succesful_job", data=[("work_ID", tbp)], files=[("resfil", "Results.tar.gz")])
 
     # Deletes the temporary files
-
+    r_dat.delete(tbp)
+    r_run.hmset(tbp, Con_Data) # Keeps a log of run jobs
+    shutil.rmtree("./Process-Tar")

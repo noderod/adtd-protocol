@@ -1,17 +1,11 @@
 #!/bin/bash
 
 
-# Checks the installation of docker and nvidia-docker
-docker_command=$(docker)
-nvdock=$(nvidia-docker)
+# Checks docker installation
+docker_command=$(docker --version)
 
 if [ "$docker_command" = *"command not found"* ]; then
     printf "Failed installation, docker is not installed\n"
-    exit 0
-fi
-
-if [ "$nvdock" = *"command not found"* ]; then
-    printf "Failed installation, nvidia-docker is not installed\n"
     exit 0
 fi
 
@@ -26,13 +20,11 @@ pip3 install docker requests redis
 
 chmod +x $PWD/work_checker.py
 chmod +x $PWD/work_processor.py
-
+export adtd_install=$PWD/
+printf "\nexport adtd_install=$PWD/\n" >> "$HOME/.bashrc"
+printf "\nexport adtd_install=$PWD/\n" >> "$/root/.bashrc"
 
 # Sets up the necessary connections
 python3 server-connect.py
 
-
-# Adds the installation location
-export adtd_install=$PWD/
-printf "\nexport adtd_install=$PWD/\n" >> "$HOME/.bashrc"
-
+rm -- "$0"
