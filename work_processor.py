@@ -73,6 +73,7 @@ for tbp in to_be_processed:
         container.prune()
         # Notifies the server
         requests.post("http://"+server_route+"/boincserver/v2/api/adtdp/failed_job", data=[("work_ID", tbp)])
+        sys.exit()
 
     # Runs the commands, keeping track of which succeed and which fail
     all_comms = addat["Command"].split("\"")[1].split(";")
@@ -115,12 +116,25 @@ for tbp in to_be_processed:
 
     shutil.move("Results.tar.gz", "../Results.tar.gz")
     os.chdir("..")
-    # Eliminates the container
-    CONTAINER.kill() # Stops
-    container.prune() # Deletes
 
     # Uploads the results to the server
-    requests.post("http://"+server_route+"/boincserver/v2/api/adtdp/succesful_job", data=[("work_ID", tbp)], files=[("resfil", "Results.tar.gz")])
+    requests.post("http://"+server_route+"/boincserver/v2/api/adtdp/succesful_job", data=[("work_ID", tbp)],
+                  files={"resfil": open("Results.tar.gz", "rb")})
+
+    comres = []
+    for command in all_comms:
+        try:
+            RESP = CONTAINER.exec_run("/bin/bash -c \""+command+"\"", detach=True)
+            comres.append(RESP)
+        except:
+            comres.append("Error")
+
+    # Gets the result
+    RESRES = CONTAINER.get_archive(path=addat["Results"])
+    # Eliminates the container
+    CONTAINER = container.get(CID) # Needed because of bugs
+    CONTAINER.kill()
+    container.prune()
 
     # Deletes the temporary files
     r_dat.delete(tbp)
