@@ -43,7 +43,14 @@ for tbp in to_be_processed:
         shutil.copyfileobj(star.raw, f)
 
     # There is always the same files, so we extract both and delete the main one
-    tar = tarfile.open("all_data.tar.gz")
+    try:
+        tar = tarfile.open("all_data.tar.gz")
+    except:
+        r_dat.delete(tbp)
+        os.remove("all_data.tar.gz")
+        # The job is already being run
+        sys.exit()
+
     tar.extractall()
     os.remove("all_data.tar.gz")
     tar.close()
@@ -97,7 +104,7 @@ for tbp in to_be_processed:
     try:
         RESRES = CONTAINER.get_archive(path=addat["Results"])
     except:
-        addat["Result Error"] = "Folder with results does exist"
+        addat["Result Error"] = "Folder with results does not exist"
 
     with open("Job_Data.json", "w") as jobdat:
         addat["Error"] = "Success"
@@ -108,6 +115,10 @@ for tbp in to_be_processed:
             tarta.write(bitbit)
 
     # Because tar files cannot be modified once created, we have to untar the file and then tar it again
+    try:
+        shutil.rmtree("./Process-Tar")
+    except:
+        pass
     os.mkdir("Process-Tar")
     shutil.move("Job_Data.json", "Process-Tar/Job_Data.json")
     tar = tarfile.open("Results.tar.gz")
@@ -118,29 +129,17 @@ for tbp in to_be_processed:
         for file in os.listdir("."):
             tar.add(file)
 
-    shutil.move("Results.tar.gz", "../Results.tar.gz")
-    os.chdir("..")
 
     # Uploads the results to the server
     requests.post("http://"+server_route+"/boincserver/v2/api/adtdp/succesful_job", data=[("work_ID", tbp), ("gr", GR), ("br", BR)],
                   files={"resfil": open("Results.tar.gz", "rb")})
 
-    comres = []
-    for command in all_comms:
-        try:
-            RESP = CONTAINER.exec_run("/bin/bash -c \""+command+"\"", detach=True)
-            comres.append(RESP)
-        except:
-            comres.append("Error")
 
-    # Gets the result
-    RESRES = CONTAINER.get_archive(path=addat["Results"])
-    # Eliminates the container
-    CONTAINER = container.get(CID) # Needed because of bugs
-    CONTAINER.kill()
+    # Eliminates all containers
     container.prune()
 
     # Deletes the temporary files
     r_dat.delete(tbp)
     r_run.hmset(tbp, Con_Data) # Keeps a log of run jobs
+    os.chdir("..")
     shutil.rmtree("./Process-Tar")

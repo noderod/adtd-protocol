@@ -4,7 +4,7 @@
 # Checks docker installation
 docker_command=$(docker --version)
 
-if [ "$docker_command" = *"command not found"* ]; then
+if [ "$docker_command" = *"not installed"* ]; then
     printf "Failed installation, docker is not installed\n"
     exit 0
 fi
