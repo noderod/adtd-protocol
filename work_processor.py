@@ -80,13 +80,17 @@ for tbp in to_be_processed:
     prestime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     Con_Data = {"date (Run)":prestime, "Commands":[], "Id":tbp}
     comres = [[], []]
+    GR = 0 # Command succeeded inside container
+    BR = 0 # Command failed inside container
     for command in all_comms:
         try:
             RESP = CONTAINER.exec_run("/bin/bash -c \""+command+"\"")
             comres[0].append(command)
             comres[1].append("Success")
+            GR += 1
         except:
             comres[1].append("Error")
+            BR +=1
 
     Con_Data["Commands"] = comres
     # Gets the result
@@ -118,7 +122,7 @@ for tbp in to_be_processed:
     os.chdir("..")
 
     # Uploads the results to the server
-    requests.post("http://"+server_route+"/boincserver/v2/api/adtdp/succesful_job", data=[("work_ID", tbp)],
+    requests.post("http://"+server_route+"/boincserver/v2/api/adtdp/succesful_job", data=[("work_ID", tbp), ("gr", GR), ("br", BR)],
                   files={"resfil": open("Results.tar.gz", "rb")})
 
     comres = []

@@ -5,7 +5,7 @@ ADTD-P is a fast, reliable way to obtain result files from docker containers.
 
 **Requirements**  
 * Docker
-* Nvidia-Docker
+* Nvidia-Docker (For GPU jobs only)
 * Python3
 
 **Setup**  
