@@ -103,6 +103,9 @@ for tbp in to_be_processed:
     # Gets the result
     try:
         RESRES = CONTAINER.get_archive(path=addat["Results"])
+        with open("Results.tar.gz", "wb") as tarta:
+            for bitbit in RESRES[0]:
+                tarta.write(bitbit)
     except:
         addat["Result Error"] = "Folder with results does not exist"
 
@@ -110,20 +113,24 @@ for tbp in to_be_processed:
         addat["Error"] = "Success"
         addat["Log"] = comres
         json.dump(addat, jobdat)
-    with open("Results.tar.gz", "wb") as tarta:
-        for bitbit in RESRES[0]:
-            tarta.write(bitbit)
 
     # Because tar files cannot be modified once created, we have to untar the file and then tar it again
     try:
         shutil.rmtree("./Process-Tar")
     except:
         pass
+
     os.mkdir("Process-Tar")
+
+    # Not all jobs will be succesful in obtaining the results
+    try:
+        tar = tarfile.open("Results.tar.gz")
+        tar.extractall("./Process-Tar")
+        tar.close()
+    except:
+        pass
+
     shutil.move("Job_Data.json", "Process-Tar/Job_Data.json")
-    tar = tarfile.open("Results.tar.gz")
-    tar.extractall("./Process-Tar")
-    tar.close()
     os.chdir("./Process-Tar")
     with tarfile.open("Results.tar.gz", "w:gz") as tar:
         for file in os.listdir("."):

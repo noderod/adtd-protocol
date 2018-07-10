@@ -18,3 +18,18 @@ ADTD-P is a fast, reliable way to obtain result files from docker containers.
 	sudo bash setter.sh
 ```
 
+**Processing Instructions**  
+The following instructions must be done in order and with sudo access if needed. This instructions can also be set up as a cron job for periodicity.
+1. Update the local client with information about run jobs
+2. Run local jobs and upload results to the server
+3. Eliminate local images (images older than 4 h, may delete other user images): *idir.py*
+
+```bash
+	cd $adtd_install
+	sudo ./work_checker.py
+	sudo ./work_processor.py
+	sudo ./idir.py
+```
+
+**Local History**  
+It is possible to recover the data for all run jobs locally using the following script:  
