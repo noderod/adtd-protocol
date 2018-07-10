@@ -24,8 +24,8 @@ image = client.images
 container = client.containers
 
 
-# Searches all the users only, no MIDAS directories
-all_images = [y.tags[0] for y in image.list()]
+all_images = [y.short_id.split(':')[1] for y in image.list()]
+all_containers = [z.short_id for z in container.list()]
 
 
 # Obtains the time when an image was created
@@ -38,12 +38,27 @@ def Image_creation_time(IMTAG):
 
 # Checks if an image was created more than 4 hours ago
 # creation_time (datetime obj.): Time when the image was created
-def image_older_4h(creation_time):
+def image_older_4h(IMTAG):
 
-    if (datetime.datetime.utcnow() - creation_time).total_seconds() > (4*3600):
+    if (datetime.datetime.utcnow() - Image_creation_time(IMTAG)).total_seconds() > (4*3600):
         return True
 
     return False
+
+def container_older_4h(CONTAG):
+    contim = container.get(CONTAG).attrs['Created'].replace("T", ' ').split('.')[0]
+    contim_dateObj = datetime.datetime.strptime(contim, "%Y-%m-%d %H:%M:%S")
+
+    if (datetime.datetime.utcnow() - contim_dateObj).total_seconds() > (4*3600):
+        return True
+
+    return False
+
+# Stops all containers older than 4 hours
+container_to_be_stopped = [fg for fg in all_containers if container_older_4h(fg)]
+for contan in container_to_be_stopped:
+    container.get(contan).kill()
+
 
 
 # Removes all exited containers
@@ -58,5 +73,10 @@ if len(to_be_deleted) == 0:
 
 
 for imim in to_be_deleted:
-    image.remove(image=imim, force=True)
+
+    try:
+   	    image.remove(image=imim, force=True)
+   	except:
+   	    # Not all images will be able to be deleted
+   	    continue
     r9.set(imim, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
