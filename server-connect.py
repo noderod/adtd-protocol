@@ -15,6 +15,17 @@ r = redis.Redis(host = '0.0.0.0', port = 6389, db = 10)
 server_IP = str(input("Enter server IP: "))
 server_port = str(input("Enter server port: "))
 
+while True:
+    # Not all hosts are required to run GPU jobs
+    gpu_able = str(input("System can run GPU jobs [y/n]: ")).lower()
+
+    if (gpu_able == 'y') or (gpu_able == 'n'):
+        break
+
+    print("Invalid answer, please enter 'y'/'n'")
+
+
+
 resp = requests.get("http://"+server_IP+':'+server_port+"/boincserver/v2/api/adtdp_server")
 
 if resp.text != "Server is ADTDP able":
@@ -25,6 +36,6 @@ if resp.text != "Server is ADTDP able":
 # Sets the values
 r.set("server IP", server_IP)
 r.set("server port", server_port)
-r.set("file loc", os.environ['adtd_install'])
+r.set("gpu able", gpu_able)
 
 print("Server "+server_IP+":"+server_port+" is now available for adtd-p")

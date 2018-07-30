@@ -75,8 +75,8 @@ if len(to_be_deleted) == 0:
 for imim in to_be_deleted:
 
     try:
-   	    image.remove(image=imim, force=True)
-   	except:
-   	    # Not all images will be able to be deleted
-   	    continue
+        image.remove(image=imim, force=True)
+    except:
+        # Not all images will be able to be deleted
+        continue
     r9.set(imim, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))

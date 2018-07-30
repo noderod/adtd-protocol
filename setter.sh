@@ -12,18 +12,14 @@ fi
 
 
 apt-get update -y
-apt-get install redis-server -y
+apt-get install redis-server python3 python3-pip -y
 redis-server --port 6389 &
 
 pip3 install docker requests redis
 
 
-chmod +x $PWD/work_checker.py
-chmod +x $PWD/work_processor.py
-export adtd_install=$PWD
-adtd_install=$PWD/
-printf "\nexport adtd_install=$PWD/\n" >> "$HOME/.bashrc"
-printf "\nexport adtd_install=$PWD/\n" >> "$/root/.bashrc"
+chmod +x ./work_checker.py
+chmod +x ./work_processor.py
 
 # Sets up the necessary connections
 python3 server-connect.py

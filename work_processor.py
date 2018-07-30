@@ -64,9 +64,17 @@ for tbp in to_be_processed:
     IMG = image.load(ff.read())
     ff.close()
 
+    resp = requests.get("http://"+server_route+"/boincserver/v2/api/adtdp/info/"+tbp)
+    jdat = json.loads(resp.text)
+    dver = "docker"
+
+    if (jdat["GPU"] == "True"):
+        # GPU jobs require nvidia-docker to use CUDA properly
+        dver = "nvidia-docker"
+
     # Runs the commands in a container
     try:
-        P = sbp.Popen("docker run -itd "+str(IMG[0].short_id.split(':')[1]), shell=True, stdout = sbp.PIPE)
+        P = sbp.Popen(dver+" run -itd "+str(IMG[0].short_id.split(':')[1]), shell=True, stdout = sbp.PIPE)
         CID = P.communicate()[0].decode("UTF-8")[:12:] # Container ID
         CONTAINER = container.get(CID)
         # CONTAINER = container.run(image = IMG[0].short_id.split(':')[1], command="/bin/bash", detach=True)
@@ -92,10 +100,15 @@ for tbp in to_be_processed:
     for command in all_comms:
         try:
             RESP = CONTAINER.exec_run("/bin/bash -c \""+command+"\"")
+            # Checks the exit code
+            if RESP[0] != 0:
+                raise
+
             comres[0].append(command)
             comres[1].append("Success")
             GR += 1
         except:
+            comres[0].append(command)
             comres[1].append("Error")
             BR +=1
 

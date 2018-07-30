@@ -12,6 +12,7 @@ import requests
 import redis
 import sys
 import datetime
+import json
 
 
 r_ser = redis.Redis(host='0.0.0.0', port=6389,db=10)
@@ -26,6 +27,22 @@ if jobs_ava[0] == "No jobs available":
     sys.exit()
 
 
-prestime = prestime = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-# Adds the job to the database of jobs left to do
-r_dat.set(jobs_ava[0], prestime)
+gpu_able = r_ser.get("gpu able").decode("UTF-8")
+# Checks the job database one by one
+# Adds the first  job which the system can run
+
+for wid in jobs_ava:
+
+    resp = requests.get("http://"+server_route+"/boincserver/v2/api/adtdp/info/"+wid)
+    jdat = json.loads(resp.text)
+
+    if (jdat["GPU"] == "True") and (gpu_able == "n"):
+        continue
+
+
+    prestime = prestime = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Adds the job to the database of jobs left to do
+    r_dat.set(wid, prestime)
+
+    print("Job No. "+wid)
