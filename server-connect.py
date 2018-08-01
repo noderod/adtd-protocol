@@ -37,5 +37,6 @@ if resp.text != "Server is ADTDP able":
 r.set("server IP", server_IP)
 r.set("server port", server_port)
 r.set("gpu able", gpu_able)
+r.set("file loc", os.path.dirname(os.path.abspath(__file__)))
 
 print("Server "+server_IP+":"+server_port+" is now available for adtd-p")

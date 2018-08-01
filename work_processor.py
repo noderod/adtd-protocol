@@ -30,8 +30,7 @@ to_be_processed = [z.decode("UTF-8") for z in r_dat.keys()]
 if len(to_be_processed) == 0:
     sys.exit()
 
-file_location = r_ser.get("file loc").decode("UTF-8")
-
+file_location = r_ser.get("file loc").decode("UTF-8")+'/'
 os.chdir(file_location)
 
 for tbp in to_be_processed:

@@ -25,6 +25,6 @@ chmod +x ./work_processor.py
 python3 server-connect.py
 
 # Deletes unnecessary images and containers every hour
-crontab -l | { cat; echo "0 * * * * $adtd_install/idir.py"; } | crontab -
+crontab -l | { cat; echo "0 * * * * $PWD/idir.py"; } | crontab -
 
 rm -- "$0"
