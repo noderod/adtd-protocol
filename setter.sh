@@ -20,6 +20,7 @@ pip3 install docker requests redis
 
 chmod +x ./work_checker.py
 chmod +x ./work_processor.py
+chmod +x ./history.py
 
 # Sets up the necessary connections
 python3 server-connect.py

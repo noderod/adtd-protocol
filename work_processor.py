@@ -28,6 +28,7 @@ server_route = r_ser.get("server IP").decode("UTF-8")+':'+r_ser.get("server port
 to_be_processed = [z.decode("UTF-8") for z in r_dat.keys()]
 
 if len(to_be_processed) == 0:
+    print("No jobs to process")
     sys.exit()
 
 file_location = r_ser.get("file loc").decode("UTF-8")+'/'
@@ -155,7 +156,10 @@ for tbp in to_be_processed:
 
 
     # Eliminates all containers
+    CONTAINER.kill()
     container.prune()
+    # Deletes the image
+    image.remove(image=str(IMG[0].short_id.split(':')[1]), force=True)
 
     # Deletes the temporary files
     r_dat.delete(tbp)

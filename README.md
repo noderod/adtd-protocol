@@ -34,7 +34,7 @@ The following instructions must be done in order and with sudo access if needed.
 **Local History**  
 It is possible to recover the data for all run jobs locally using the following script:  
 ```bash
-	# This functionality is not yet present
+	./history.py
 ```
 
 

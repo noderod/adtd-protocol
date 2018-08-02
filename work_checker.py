@@ -24,6 +24,7 @@ server_route = r_ser.get("server IP").decode("UTF-8")+':'+r_ser.get("server port
 jobs_ava = requests.get("http://"+server_route+"/boincserver/v2/api/available_adtdp").text.split(', ')
 
 if jobs_ava[0] == "No jobs available":
+	print("No jobs available")
     sys.exit()
 
 
