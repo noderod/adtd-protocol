@@ -60,11 +60,6 @@ def manprint(mst):
             print(22*' '+'|')
 
 
-
-
-
-
-
 # Obtains all the keys
 jobs_run = [x.decode("UTF-8") for x in r.keys()]
 
