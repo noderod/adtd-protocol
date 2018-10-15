@@ -25,7 +25,6 @@ The following instructions must be done in order and with sudo access if needed.
 3. Eliminate local images (images older than 4 h, may delete other user images): *idir.py*
 
 ```bash
-	cd $adtd_install
 	sudo ./work_checker.py
 	sudo ./work_processor.py
 	sudo ./idir.py
