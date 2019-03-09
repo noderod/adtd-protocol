@@ -19,7 +19,7 @@ import subprocess as sbp
 r_ser = redis.Redis(host='0.0.0.0', port=6389,db=10)
 r_dat = redis.Redis(host='0.0.0.0', port=6389,db=1)
 r_run = redis.Redis(host='0.0.0.0', port=6389,db=0)
-image =docker.from_env(timeout=5*60).images
+image =docker.from_env(timeout=20*60).images
 container =  docker.from_env().containers
 
 server_route = r_ser.get("server IP").decode("UTF-8")+':'+r_ser.get("server port").decode("UTF-8")
@@ -163,6 +163,9 @@ for tbp in to_be_processed:
 
     # Deletes the temporary files
     r_dat.delete(tbp)
-    r_run.hmset(tbp, Con_Data) # Keeps a log of run jobs
     os.chdir("..")
     shutil.rmtree("./Process-Tar")
+    os.remove("./image.tar.gz")
+    # Changes the commands into a JSON string, done here for clarity purposes
+    Con_Data["Commands"] = json.dumps(Con_Data["Commands"])
+    r_run.hmset(tbp, Con_Data) # Keeps a log of run jobs
